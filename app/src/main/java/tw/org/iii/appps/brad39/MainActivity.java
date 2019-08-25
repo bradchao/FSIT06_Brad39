@@ -2,12 +2,18 @@ package tw.org.iii.appps.brad39;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.AudioManager;
+import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -22,11 +28,22 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity {
     private AudioManager amgr;
     private File sdroot;
+    private MediaRecorder recorder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,},
+                    123);
+        }
+
 
         amgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
@@ -95,4 +112,30 @@ public class MainActivity extends AppCompatActivity {
         Files.copy(new File(fileName), target);
     }
 
+    public void test6(View view) {
+        try {
+            recorder = new MediaRecorder();
+            recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+
+            //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            recorder.setOutputFile(new File(sdroot, "brad0825.mp3").getAbsolutePath());
+            //recorder.setOutputFile(new File(sdroot, "brad0825.3gp"));
+            recorder.prepare();
+            recorder.start();
+
+        }catch (Exception e){
+            Log.v("brad", e.toString());
+        }
+
+    }
+
+    public void test7(View view) {
+        if (recorder != null){
+            recorder.stop();
+            recorder.reset();   // You can reuse the object by going back to setAudioSource() step
+            recorder.release();
+        }
+    }
 }
